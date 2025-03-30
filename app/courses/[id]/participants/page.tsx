@@ -24,6 +24,14 @@ interface Course {
   current_participants: number;
 }
 
+// Interface für die Daten, die von Supabase zurückgegeben werden
+interface ParticipantData {
+  patient_id: string;
+  profiles: Patient | Patient[];
+  attendance_count: number;
+  last_attendance: string | null;
+}
+
 export default function CourseParticipants({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
@@ -73,13 +81,30 @@ export default function CourseParticipants({ params }: { params: { id: string } 
       // Erstelle ein Array von CourseParticipant-Objekten
       const formattedParticipants: CourseParticipant[] = [];
       
-      for (const p of participantsData) {
-        if (p.profiles) {
+      // Typumwandlung zu ParticipantData[]
+      const typedParticipantsData = participantsData as unknown as ParticipantData[];
+      
+      for (const p of typedParticipantsData) {
+        // Extrahiere das Profil, unabhängig davon, ob es ein Array oder ein einzelnes Objekt ist
+        let profile: Patient | undefined;
+        
+        if (Array.isArray(p.profiles)) {
+          // Wenn es ein Array ist, nehmen wir das erste Element
+          if (p.profiles.length > 0) {
+            profile = p.profiles[0];
+          }
+        } else {
+          // Wenn es ein einzelnes Objekt ist
+          profile = p.profiles;
+        }
+        
+        // Wenn wir ein gültiges Profil haben, fügen wir es zu formattedParticipants hinzu
+        if (profile) {
           formattedParticipants.push({
-            id: p.profiles.id,
-            full_name: p.profiles.full_name,
-            email: p.profiles.email,
-            insurance_provider: p.profiles.insurance_provider,
+            id: profile.id,
+            full_name: profile.full_name,
+            email: profile.email,
+            insurance_provider: profile.insurance_provider,
             attendance_count: p.attendance_count || 0,
             last_attendance: p.last_attendance
           });
