@@ -53,7 +53,8 @@ export default function CourseParticipants({ params }: { params: { id: string } 
       const { data: participantsData, error: participantsError } = await supabase
         .from('course_participants')
         .select(`
-          patient:profiles (
+          patient_id,
+          profiles:patient_id (
             id,
             full_name,
             email,
@@ -66,11 +67,24 @@ export default function CourseParticipants({ params }: { params: { id: string } 
 
       if (participantsError) throw participantsError;
 
-      const formattedParticipants = participantsData.map(p => ({
-        ...p.patient,
-        attendance_count: p.attendance_count || 0,
-        last_attendance: p.last_attendance
-      }));
+      // Protokolliere die Struktur der Daten, um sie besser zu verstehen
+      console.log('Participants data:', JSON.stringify(participantsData, null, 2));
+
+      // Erstelle ein Array von CourseParticipant-Objekten
+      const formattedParticipants: CourseParticipant[] = [];
+      
+      for (const p of participantsData) {
+        if (p.profiles) {
+          formattedParticipants.push({
+            id: p.profiles.id,
+            full_name: p.profiles.full_name,
+            email: p.profiles.email,
+            insurance_provider: p.profiles.insurance_provider,
+            attendance_count: p.attendance_count || 0,
+            last_attendance: p.last_attendance
+          });
+        }
+      }
 
       setParticipants(formattedParticipants);
 
