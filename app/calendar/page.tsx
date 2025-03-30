@@ -10,7 +10,7 @@ import deLocale from '@fullcalendar/core/locales/de';
 
 interface Course {
   id: string;
-  name: string;
+  title: string;
   start_time: string;
   end_time: string;
   location: string;
@@ -115,7 +115,7 @@ export default function CalendarPage() {
           // Tatsächliche Kurse in Kalender-Events umwandeln
           const formattedEvents = courses.map((course: Course) => ({
             id: course.id,
-            title: course.name,
+            title: course.title,
             start: course.start_time,
             end: course.end_time,
             extendedProps: {
