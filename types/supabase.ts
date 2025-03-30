@@ -249,6 +249,29 @@ export interface Database {
           notes?: string | null
         }
       }
+      messages: {
+        Row: {
+          id: string
+          created_at: string
+          sender_id: string
+          course_id: string
+          message: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          sender_id: string
+          course_id: string
+          message: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          sender_id?: string
+          course_id?: string
+          message?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
