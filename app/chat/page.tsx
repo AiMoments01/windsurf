@@ -6,11 +6,17 @@ import { useUser } from '@/hooks/useUser';
 import { Database } from '@/types/supabase';
 
 type Message = Database['public']['Tables']['messages']['Row'];
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Course = Database['public']['Tables']['courses']['Row'];
+type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  username?: string;
+};
+type Course = Database['public']['Tables']['courses']['Row'] & {
+  title: string;
+};
 
 type MessageWithProfile = Message & {
   profiles: Profile | null;
+  user_id?: string;
+  content?: string;
 };
 
 export default function ChatPage() {
