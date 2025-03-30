@@ -52,7 +52,7 @@ export interface Database {
           id: string
           created_at: string
           updated_at: string
-          name: string
+          title: string
           description: string | null
           max_participants: number
           therapist_id: string | null
@@ -68,7 +68,7 @@ export interface Database {
           id?: string
           created_at?: string
           updated_at?: string
-          name: string
+          title: string
           description?: string | null
           max_participants?: number
           therapist_id?: string | null
@@ -84,7 +84,7 @@ export interface Database {
           id?: string
           created_at?: string
           updated_at?: string
-          name?: string
+          title?: string
           description?: string | null
           max_participants?: number
           therapist_id?: string | null
