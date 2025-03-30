@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 250, 250, 250;
+  --background-end-rgb: 255, 255, 255;
+  
+  /* Primärfarben */
+  --primary: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;  /* Hellere Textfarbe für besseren Kontrast */
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 2, 6, 23;
+  
+  /* Anpassen der Farben für den Dark Mode */
+  --primary: #60a5fa;  /* Helleres Blau für besseren Kontrast */
+  --primary-light: #93c5fd;
+  --primary-dark: #3b82f6;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+@layer base {
+  .dark .fc .fc-toolbar-title, 
+  .dark .fc .fc-col-header-cell-cushion,
+  .dark .fc .fc-daygrid-day-number {
+    color: rgb(255, 255, 255) !important;  /* Weiße Schrift für besseren Kontrast */
+  }
+  
+  .dark .fc-theme-standard .fc-scrollgrid,
+  .dark .fc-theme-standard td, 
+  .dark .fc-theme-standard th {
+    border-color: rgb(71, 85, 105) !important;  /* Hellere Rahmenfarbe */
+  }
+  
+  .dark .fc .fc-button-primary {
+    background-color: var(--primary) !important;
+    border-color: var(--primary-dark) !important;
+  }
+  
+  .dark .fc-daygrid-day {
+    background-color: rgb(30, 41, 59, 0.7) !important;  /* Leicht undurchsichtiger für besseren Kontrast */
+  }
+}
+
+@layer components {
+  /* Form Styles */
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-100;  /* Hellere Labels */
+  }
+  
+  .form-input {
+    @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-white dark:bg-gray-800;
+  }
+  
+  /* Button Styles */
+  .btn-primary {
+    @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-blue-500 dark:hover:bg-blue-600;  /* Helleres Blau für Buttons */
+  }
+  
+  .btn-secondary {
+    @apply inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-600;
+  }
+  
+  /* Card Styles */
+  .card {
+    @apply bg-white dark:bg-dark-card shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-dark-border;
+  }
+  
+  .card-header {
+    @apply px-4 py-3 border-b border-gray-200 dark:border-dark-border;
+  }
+  
+  .card-body {
+    @apply px-4 py-3;
+  }
+
+  /* Dashboard Widgets */
+  .dashboard-stat {
+    @apply p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center space-x-4 bg-white dark:bg-dark-card text-gray-700 dark:text-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200;  /* Hellere Textfarbe */
+  }
+  
+  .stat-icon {
+    @apply p-3 rounded-full bg-primary/10 dark:bg-blue-500/30 text-primary dark:text-blue-300;  /* Helleres Icon */
+  }
+  
+  /* FullCalendar Customization */
+  .fc {
+    @apply font-sans;
+  }
+
+  .fc-toolbar-title {
+    @apply text-xl font-bold !important;
+  }
+
+  .fc-button {
+    @apply bg-primary hover:bg-primary-dark !important;
+  }
+
+  .fc-event {
+    @apply cursor-pointer border-none !important;
+    background-color: var(--primary) !important;
+  }
+  
+  /* Navigation Styles */
+  .nav-link {
+    @apply px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-dark-hover;  /* Hellere Navigationslinks */
+  }
+  
+  .nav-link-active {
+    @apply bg-primary/10 text-primary dark:bg-blue-900/50 dark:text-blue-200;  /* Hellere aktive Links */
+  }
+  
+  .theme-toggle {
+    @apply p-2 rounded-full text-gray-600 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-dark-hover transition-colors duration-200;  /* Hellere Toggle-Schaltfläche */
+  }
+}
