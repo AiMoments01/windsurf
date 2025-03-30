@@ -5,8 +5,8 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { createBrowserClient } from '@supabase/ssr';
 import deLocale from '@fullcalendar/core/locales/de';
+import { supabase } from '@/lib/supabase';
 
 interface Course {
   id: string;
@@ -35,14 +35,6 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Direktes Erstellen des Supabase-Clients
-  const [supabase] = useState(() => 
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
-
   useEffect(() => {
     fetchCourses();
   }, []);
