@@ -23,10 +23,10 @@ import { Database } from '@/types/supabase';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const navigation = [
-  { name: 'Dashboard', href: '/' },
-  { name: 'Kalender', href: '/calendar', icon: CalendarIcon },
-  { name: 'Patienten', href: '/patients', icon: UserGroupIcon },
-  { name: 'Kurse', href: '/courses', icon: AcademicCapIcon },
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Kalender', href: '/dashboard/calendar', icon: CalendarIcon },
+  { name: 'Patienten', href: '/dashboard/patients', icon: UserGroupIcon },
+  { name: 'Kurse', href: '/dashboard/courses', icon: AcademicCapIcon },
 ];
 
 function classNames(...classes: string[]) {
@@ -184,7 +184,7 @@ export default function Navigation() {
                         <Menu.Item>
                           {({ active }) => (
                             <Link
-                              href="/profile"
+                              href="/dashboard/profile"
                               className={classNames(
                                 active ? 'bg-gray-100 dark:bg-dark-hover' : '',
                                 'block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300'
@@ -283,7 +283,7 @@ export default function Navigation() {
                   <div className="mt-2 space-y-0.5">
                     <Disclosure.Button
                       as="a"
-                      href="/profile"
+                      href="/dashboard/profile"
                       className="block px-3 sm:px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-hover hover:text-gray-800"
                     >
                       Profil

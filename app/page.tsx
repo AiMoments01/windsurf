@@ -126,7 +126,7 @@ export default function Home() {
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm">
-                  <Link href="/patients" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href="/dashboard/patients" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
                     Alle anzeigen
                   </Link>
                 </div>
@@ -151,7 +151,7 @@ export default function Home() {
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm">
-                  <Link href="/courses" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href="/dashboard/courses" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
                     Alle anzeigen
                   </Link>
                 </div>
@@ -176,7 +176,7 @@ export default function Home() {
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm">
-                  <Link href="/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href="/dashboard/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
                     Kalender öffnen
                   </Link>
                 </div>
@@ -201,7 +201,7 @@ export default function Home() {
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm">
-                  <Link href="/prescriptions" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href="/dashboard/prescriptions" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
                     Alle anzeigen
                   </Link>
                 </div>
@@ -235,7 +235,7 @@ export default function Home() {
               </ul>
               <div className="bg-gray-50 dark:bg-gray-800/50 px-4 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-xs sm:text-sm">
-                  <Link href="/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href="/dashboard/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
                     Alle Aktivitäten anzeigen
                   </Link>
                 </div>
