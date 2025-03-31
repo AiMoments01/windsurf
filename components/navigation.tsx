@@ -14,7 +14,7 @@ import {
   SunIcon,
   MoonIcon
 } from '@heroicons/react/24/outline';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase';
 import { useTheme } from '@/context/ThemeContext';
 import { safeQueryTable } from '@/utils/database-helpers';
 import { Database } from '@/types/supabase';
@@ -39,13 +39,8 @@ export default function Navigation() {
   const [userName, setUserName] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   
-  // Direktes Erstellen des Supabase-Clients (temporäre Lösung)
-  const [supabase] = useState(() => 
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+  // Verwenden des Singleton-Clients
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     // Prüfe den Authentifizierungsstatus beim Laden

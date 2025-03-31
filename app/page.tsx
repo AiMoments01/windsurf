@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDaysIcon, UserGroupIcon, DocumentTextIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase';
 import { useTheme } from '@/context/ThemeContext';
 
 interface DashboardStats {
@@ -24,13 +24,8 @@ export default function Home() {
   });
   const { theme } = useTheme();
 
-  // Direktes Erstellen des Supabase-Clients (temporäre Lösung)
-  const [supabase] = useState(() => 
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+  // Verwenden des Singleton-Clients
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     // Prüfe den Auth-Status und hole den Benutzer
