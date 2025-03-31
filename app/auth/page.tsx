@@ -25,7 +25,7 @@ export default function Auth() {
           console.log("Bereits angemeldet, leite weiter zum Dashboard...");
           // Kurze Verzögerung für die Weiterleitung
           setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = '/dashboard';
           }, 500);
         }
       } catch (error) {
@@ -64,7 +64,7 @@ export default function Auth() {
         console.log("Anmeldung erfolgreich:", data);
         
         // Direkte Weiterleitung mit window.location für vollständigen Seitenneuaufbau
-        window.location.href = '/';
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       console.error("Anmeldefehler:", error);
