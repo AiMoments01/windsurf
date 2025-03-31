@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CalendarDaysIcon, UserGroupIcon, DocumentTextIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -14,6 +15,7 @@ interface DashboardStats {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
@@ -29,24 +31,173 @@ export default function Home() {
 
   useEffect(() => {
     // Prüfe den Auth-Status und hole den Benutzer
-    const getUser = async () => {
+    const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setUser(data.session?.user || null);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // Wenn nicht angemeldet, zur Anmeldeseite weiterleiten
+          console.log("Keine Sitzung gefunden, leite zur Anmeldeseite weiter");
+          router.push('/auth');
+          return;
+        }
+
+        setUser(session.user);
+        console.log("Hauptseite: Benutzer gefunden, ID:", session.user.id);
+
+        // Benutzerrolle überprüfen
+        const { data: userData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Hauptseite: Fehler beim Abrufen des Profils:", profileError);
+          
+          // Wenn kein Profil gefunden wurde, erstellen wir eines mit der Rolle aus den Metadaten oder 'patient' als Standard
+          if (profileError.code === 'PGRST116') {
+            const userMetadata = session.user.user_metadata;
+            const role = userMetadata?.role || 'patient';
+            
+            console.log("Hauptseite: Erstelle neues Profil mit Rolle:", role);
+            
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([
+                { 
+                  id: session.user.id, 
+                  email: session.user.email,
+                  role: role,
+                  created_at: new Date()
+                }
+              ]);
+            
+            if (insertError) {
+              console.error("Hauptseite: Fehler beim Erstellen des Profils:", insertError);
+              router.push('/auth?error=profile_creation_failed');
+              return;
+            }
+            
+            // Weiterleitung basierend auf Rolle
+            if (role === 'admin') {
+              router.push('/admin');
+            } else if (role === 'trainer') {
+              router.push('/trainer');
+            } else {
+              router.push('/patient');
+            }
+            return;
+          }
+          
+          // Bei anderen Fehlern zur Auth-Seite zurück
+          router.push('/auth?error=profile_error');
+          return;
+        }
+
+        // Weiterleitung basierend auf Rolle
+        const role = userData?.role || 'patient';
+        console.log("Hauptseite: Benutzerrolle gefunden:", role);
+        
+        if (role === 'admin') {
+          router.push('/admin');
+        } else if (role === 'trainer') {
+          router.push('/trainer');
+        } else {
+          router.push('/patient');
+        }
       } catch (error) {
         console.error('Fehler beim Abrufen der Sitzung:', error);
         setUser(null);
+        router.push('/auth?error=session_error');
       } finally {
         setLoading(false);
       }
     };
     
-    getUser();
+    checkAuth();
     
     // Auth-Status-Listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null);
+      async (event, session) => {
+        console.log("Auth-Status geändert:", event);
+        
+        if (session) {
+          setUser(session.user);
+          
+          // Bei Anmeldung Rolle überprüfen und weiterleiten
+          const checkRole = async () => {
+            try {
+              const { data: userData, error: profileError } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (profileError) {
+                console.error("Auth-Listener: Fehler beim Abrufen des Profils:", profileError);
+                
+                // Wenn kein Profil gefunden wurde, erstellen wir eines mit der Rolle aus den Metadaten oder 'patient' als Standard
+                if (profileError.code === 'PGRST116') {
+                  const userMetadata = session.user.user_metadata;
+                  const role = userMetadata?.role || 'patient';
+                  
+                  console.log("Auth-Listener: Erstelle neues Profil mit Rolle:", role);
+                  
+                  const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert([
+                      { 
+                        id: session.user.id, 
+                        email: session.user.email,
+                        role: role,
+                        created_at: new Date()
+                      }
+                    ]);
+                  
+                  if (insertError) {
+                    console.error("Auth-Listener: Fehler beim Erstellen des Profils:", insertError);
+                    router.push('/auth?error=profile_creation_failed');
+                    return;
+                  }
+                  
+                  // Weiterleitung basierend auf Rolle
+                  if (role === 'admin') {
+                    router.push('/admin');
+                  } else if (role === 'trainer') {
+                    router.push('/trainer');
+                  } else {
+                    router.push('/patient');
+                  }
+                  return;
+                }
+                
+                // Bei anderen Fehlern zur Auth-Seite zurück
+                router.push('/auth?error=profile_error');
+                return;
+              }
+                
+              const role = userData?.role || 'patient';
+              console.log("Auth-Listener: Benutzerrolle gefunden:", role);
+                
+              if (role === 'admin') {
+                router.push('/admin');
+              } else if (role === 'trainer') {
+                router.push('/trainer');
+              } else {
+                router.push('/patient');
+              }
+            } catch (error) {
+              console.error("Auth-Listener: Fehler bei der Rollenprüfung:", error);
+              router.push('/auth?error=role_check_error');
+            }
+          };
+          
+          checkRole();
+        } else {
+          setUser(null);
+          router.push('/auth');
+        }
         setLoading(false);
       }
     );
@@ -54,196 +205,12 @@ export default function Home() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, router]);
 
-  useEffect(() => {
-    // Statistiken auch ohne Benutzer laden, um Ladeindikator zu vermeiden
-    const fetchStats = async () => {
-      try {
-        // Demo-Statistiken (einfache Version)
-        setStats({
-          totalPatients: 24,
-          activeCourses: 5,
-          upcomingSessions: 12,
-          pendingPrescriptions: 8,
-        });
-      } catch (error) {
-        console.error('Fehler beim Laden der Statistiken:', error);
-        // Fallback-Statistiken bei Fehler
-        setStats({
-          totalPatients: 0,
-          activeCourses: 0,
-          upcomingSessions: 0,
-          pendingPrescriptions: 0,
-        });
-      }
-    };
-
-    fetchStats();
-  }, []);
-
+  // Zeige Ladeindikator während der Weiterleitung
   return (
-    <div className="py-4 sm:py-6">
-      <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
-      
-      {loading ? (
-        <div className="mt-4 sm:mt-6 flex justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-primary dark:border-blue-400"></div>
-        </div>
-      ) : !user ? (
-        <div className="mt-4 sm:mt-6 rounded-lg bg-white dark:bg-dark-card p-4 sm:p-6 shadow border border-gray-200 dark:border-gray-700">
-          <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">Willkommen beim Rehasport Management System</h2>
-          <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-            Bitte melden Sie sich an, um Zugriff auf alle Funktionen zu erhalten.
-          </p>
-          <div className="mt-4">
-            <Link 
-              href="/auth" 
-              className="btn-primary text-sm sm:text-base px-3 py-1.5 sm:px-4 sm:py-2"
-            >
-              Zur Anmeldung
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-4 sm:gap-5 xs:grid-cols-2 lg:grid-cols-4">
-            <div className="dashboard-stat">
-              <div className="p-3 sm:p-5">
-                <div className="flex items-center">
-                  <div className="stat-icon">
-                    <UserGroupIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                  </div>
-                  <div className="ml-3 sm:ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Patienten</dt>
-                      <dd>
-                        <div className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">{stats.totalPatients}</div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs sm:text-sm">
-                  <Link href="/dashboard/patients" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
-                    Alle anzeigen
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-stat">
-              <div className="p-3 sm:p-5">
-                <div className="flex items-center">
-                  <div className="stat-icon">
-                    <DocumentTextIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                  </div>
-                  <div className="ml-3 sm:ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Aktive Kurse</dt>
-                      <dd>
-                        <div className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">{stats.activeCourses}</div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs sm:text-sm">
-                  <Link href="/dashboard/courses" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
-                    Alle anzeigen
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-stat">
-              <div className="p-3 sm:p-5">
-                <div className="flex items-center">
-                  <div className="stat-icon">
-                    <CalendarDaysIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                  </div>
-                  <div className="ml-3 sm:ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Kommende Termine</dt>
-                      <dd>
-                        <div className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">{stats.upcomingSessions}</div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs sm:text-sm">
-                  <Link href="/dashboard/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
-                    Kalender öffnen
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-stat">
-              <div className="p-3 sm:p-5">
-                <div className="flex items-center">
-                  <div className="stat-icon">
-                    <ClipboardDocumentCheckIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                  </div>
-                  <div className="ml-3 sm:ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Offene Verordnungen</dt>
-                      <dd>
-                        <div className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">{stats.pendingPrescriptions}</div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs sm:text-sm">
-                  <Link href="/dashboard/prescriptions" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
-                    Alle anzeigen
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 sm:mt-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">Aktivitätsübersicht</h2>
-            <div className="bg-white dark:bg-dark-card shadow overflow-hidden sm:rounded-md border border-gray-200 dark:border-gray-700">
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {[1, 2, 3].map((item) => (
-                  <li key={item} className="px-4 sm:px-6 py-3 sm:py-4 flex items-center">
-                    <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm font-medium text-primary dark:text-blue-400 truncate">
-                          Kurssitzung
-                        </p>
-                        <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                          Wirbelsäulengymnastik - Mittwoch, 14:00 Uhr
-                        </p>
-                      </div>
-                      <div className="mt-2 sm:mt-0 sm:ml-5">
-                        <div className="inline-flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                          8 Teilnehmer
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-4 sm:px-5 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs sm:text-sm">
-                  <Link href="/dashboard/calendar" className="font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300">
-                    Alle Aktivitäten anzeigen
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary dark:border-blue-400"></div>
     </div>
   );
 }

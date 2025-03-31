@@ -23,10 +23,10 @@ import { Database } from '@/types/supabase';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Kalender', href: '/dashboard/calendar', icon: CalendarIcon },
-  { name: 'Patienten', href: '/dashboard/patients', icon: UserGroupIcon },
-  { name: 'Kurse', href: '/dashboard/courses', icon: AcademicCapIcon },
+  { name: 'Dashboard', href: '/' },
+  { name: 'Kalender', href: '/calendar', icon: CalendarIcon },
+  { name: 'Patienten', href: '/patients', icon: UserGroupIcon },
+  { name: 'Kurse', href: '/courses', icon: AcademicCapIcon },
 ];
 
 function classNames(...classes: string[]) {

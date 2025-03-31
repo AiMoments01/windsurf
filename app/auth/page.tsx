@@ -11,6 +11,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'trainer' | 'patient'>('patient');
   const router = useRouter();
   
   // Verwenden des Singleton-Clients
@@ -23,9 +24,25 @@ export default function Auth() {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
           console.log("Bereits angemeldet, leite weiter zum Dashboard...");
-          // Kurze Verzögerung für die Weiterleitung
+          
+          // Benutzerrolle aus Metadaten abrufen
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.session.user.id)
+            .single();
+          
+          const role = userData?.role || 'patient';
+          
+          // Weiterleitung basierend auf Rolle
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            if (role === 'admin') {
+              window.location.href = '/admin';
+            } else if (role === 'trainer') {
+              window.location.href = '/trainer';
+            } else {
+              window.location.href = '/patient';
+            }
           }, 500);
         }
       } catch (error) {
@@ -43,16 +60,43 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        // Registrierung
+        console.log("Registrierung mit Rolle:", userRole);
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              role: userRole
+            }
           },
         });
+        
         if (error) throw error;
+        
+        // Benutzer in die profiles-Tabelle einfügen
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              { 
+                id: data.user.id, 
+                email: email,
+                role: userRole,
+                created_at: new Date()
+              }
+            ]);
+            
+          if (profileError) {
+            console.error("Fehler beim Erstellen des Profils:", profileError);
+            throw profileError;
+          }
+        }
+        
         alert('Überprüfen Sie Ihre E-Mail für den Bestätigungslink.');
       } else {
+        // Anmeldung
         console.log("Versuche Anmeldung mit:", email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -63,12 +107,53 @@ export default function Auth() {
         
         console.log("Anmeldung erfolgreich:", data);
         
-        // Direkte Weiterleitung mit window.location für vollständigen Seitenneuaufbau
-        window.location.href = '/dashboard';
+        // Benutzerrolle abrufen
+        const { data: userData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error("Fehler beim Abrufen des Profils:", profileError);
+          // Wenn kein Profil gefunden wurde, erstellen wir eines mit Standardrolle 'patient'
+          if (profileError.code === 'PGRST116') {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([
+                { 
+                  id: data.user.id, 
+                  email: email,
+                  role: 'patient',
+                  created_at: new Date()
+                }
+              ]);
+            
+            if (insertError) {
+              console.error("Fehler beim Erstellen des Profils nach Anmeldung:", insertError);
+            }
+            
+            // Weiterleitung zum Patienten-Dashboard
+            window.location.href = '/patient';
+            return;
+          }
+        }
+        
+        const role = userData?.role || 'patient';
+        console.log("Benutzerrolle:", role);
+        
+        // Weiterleitung basierend auf Rolle
+        if (role === 'admin') {
+          window.location.href = '/admin';
+        } else if (role === 'trainer') {
+          window.location.href = '/trainer';
+        } else {
+          window.location.href = '/patient';
+        }
       }
     } catch (error: any) {
       console.error("Anmeldefehler:", error);
-      setError(error.message);
+      setError(error.message || "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
     } finally {
       setLoading(false);
     }
@@ -156,114 +241,128 @@ export default function Auth() {
         </div>
 
         {/* Rechte Seite - Anmeldeformular */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="w-full max-w-md">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden">
-              <div className="px-6 py-8">
-                <h2 className="text-center text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  {isSignUp ? 'Registrieren' : 'Anmelden'}
-                </h2>
+        <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                {isSignUp ? 'Konto erstellen' : 'Anmelden'}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {isSignUp 
+                  ? 'Erstellen Sie ein neues Konto, um fortzufahren' 
+                  : 'Melden Sie sich mit Ihren Zugangsdaten an'}
+              </p>
+            </div>
 
-                <form className="space-y-5" onSubmit={handleSubmit}>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      E-Mail
-                    </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm dark:bg-gray-700"
-                      placeholder="ihre@email.de"
-                    />
-                  </div>
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Passwort
-                    </label>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm dark:bg-gray-700"
-                      placeholder={isSignUp ? 'Neues Passwort' : 'Ihr Passwort'}
-                    />
-                  </div>
-
-                  {error && (
-                    <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 text-sm">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-red-800 dark:text-red-200">{error}</h3>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <div className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Laden...
-                        </div>
-                      ) : (
-                        isSignUp ? 'Registrieren' : 'Anmelden'
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="mt-6">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">oder</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 text-center">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  E-Mail
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 
+                  focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white text-sm"
+                  placeholder="name@example.com"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Passwort
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 
+                  focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white text-sm"
+                  placeholder={isSignUp ? "Mindestens 6 Zeichen" : "Ihr Passwort"}
+                />
+              </div>
+              
+              {isSignUp && (
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Rolle auswählen
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      className="text-sm font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
-                      onClick={() => setIsSignUp(!isSignUp)}
+                      onClick={() => setUserRole('admin')}
+                      className={`px-3 py-2 text-sm font-medium rounded-md text-center transition-colors
+                        ${userRole === 'admin' 
+                          ? 'bg-primary text-white dark:bg-blue-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                        }`}
                     >
-                      {isSignUp
-                        ? 'Bereits ein Konto? Anmelden'
-                        : 'Kein Konto? Jetzt registrieren'}
+                      Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserRole('trainer')}
+                      className={`px-3 py-2 text-sm font-medium rounded-md text-center transition-colors
+                        ${userRole === 'trainer' 
+                          ? 'bg-primary text-white dark:bg-blue-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                    >
+                      Trainer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserRole('patient')}
+                      className={`px-3 py-2 text-sm font-medium rounded-md text-center transition-colors
+                        ${userRole === 'patient' 
+                          ? 'bg-primary text-white dark:bg-blue-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                    >
+                      Patient
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Footer */}
-            <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400">
-              <p> 2025 Windsurf Dashboard. Alle Rechte vorbehalten.</p>
-              <p className="mt-1">Datenschutz | Impressum | Kontakt</p>
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium 
+                  text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+                  dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Wird bearbeitet...
+                    </span>
+                  ) : isSignUp ? 'Registrieren' : 'Anmelden'}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+              >
+                {isSignUp ? 'Bereits registriert? Anmelden' : 'Neues Konto erstellen'}
+              </button>
             </div>
           </div>
         </div>
