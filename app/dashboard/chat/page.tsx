@@ -145,13 +145,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg h-[calc(100vh-12rem)]">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg h-[calc(100vh-12rem)] max-w-full mx-auto overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="p-4 border-b dark:border-gray-700">
+        <div className="p-2 sm:p-4 border-b dark:border-gray-700">
           <select
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            className="w-full p-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            className="w-full p-1.5 sm:p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs sm:text-sm focus:ring-primary focus:border-primary"
           >
             <option value="">Kurs auswählen...</option>
             {courses.map((course) => (
@@ -162,21 +162,31 @@ export default function ChatPage() {
           </select>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-4">
+          {messages.length === 0 && selectedCourse && (
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm py-4">
+              Noch keine Nachrichten in diesem Kurs. Schreibe die erste!
+            </div>
+          )}
+          {!selectedCourse && (
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm py-4">
+              Bitte wähle einen Kurs aus, um den Chat zu starten.
+            </div>
+          )}
           {messages.map((message) => (
             <div
               key={message.id}
               className="flex flex-col space-y-1"
             >
-              <div className="flex items-baseline space-x-2">
-                <span className="font-semibold text-sm">
+              <div className="flex flex-col xs:flex-row xs:items-baseline xs:space-x-2">
+                <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-gray-100">
                   {message.profiles?.username || 'Unbekannt'}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(message.created_at).toLocaleString('de-DE')}
                 </span>
               </div>
-              <p className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg inline-block">
+              <p className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg inline-block text-xs sm:text-sm break-words max-w-full text-gray-800 dark:text-gray-200">
                 {message.message}
               </p>
             </div>
@@ -184,19 +194,20 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} className="p-4 border-t dark:border-gray-700">
+        <form onSubmit={handleSendMessage} className="p-2 sm:p-4 border-t dark:border-gray-700">
           <div className="flex space-x-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Nachricht eingeben..."
-              className="flex-1 p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              className="flex-1 p-1.5 sm:p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs sm:text-sm focus:ring-primary focus:border-primary"
+              disabled={!selectedCourse}
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || !selectedCourse}
-              className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
+              className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm whitespace-nowrap"
             >
               Senden
             </button>

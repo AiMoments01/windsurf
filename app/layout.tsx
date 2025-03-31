@@ -17,12 +17,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" className="h-full">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+      </head>
       <body className={`h-full ${inter.className}`}>
         <ThemeProvider>
           <div className="min-h-full">
             <Navigation />
             <main>
-              <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+              <div className="mx-auto max-w-7xl py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
                 {children}
               </div>
             </main>

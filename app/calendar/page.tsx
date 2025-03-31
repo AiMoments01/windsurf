@@ -133,19 +133,19 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="py-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Kurskalender</h1>
+    <div className="py-4 sm:py-6 px-3 sm:px-0">
+      <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Kurskalender</h1>
       
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {loading ? (
-          <div className="text-center py-10">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-2 text-gray-600">Lädt Kurse...</p>
+          <div className="text-center py-8 sm:py-10">
+            <div className="inline-block h-7 w-7 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+            <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">Lädt Kurse...</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-2 sm:p-4 md:p-6 overflow-x-auto">
             {error && (
-              <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+              <div className="mb-3 sm:mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-3 sm:p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -153,7 +153,7 @@ export default function CalendarPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-yellow-700">
+                    <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-500">
                       Info: Diese Seite zeigt Demo-Daten an. {error}
                     </p>
                   </div>
@@ -161,44 +161,57 @@ export default function CalendarPage() {
               </div>
             )}
             
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="timeGridWeek"
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-              }}
-              locales={[deLocale]}
-              locale="de"
-              events={events}
-              height="auto"
-              allDaySlot={false}
-              slotMinTime="08:00:00"
-              slotMaxTime="20:00:00"
-              eventClick={(info) => {
-                const { extendedProps } = info.event;
-                alert(`
-                  Kurs: ${info.event.title}
-                  Ort: ${extendedProps.location}
-                  Teilnehmer: ${extendedProps.participants}
-                  Datum: ${new Date(info.event.start!).toLocaleDateString('de-DE')}
-                  Uhrzeit: ${new Date(info.event.start!).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - ${new Date(info.event.end!).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-                `);
-              }}
-              eventTimeFormat={{
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false,
-                hour12: false
-              }}
-              buttonText={{
-                today: 'Heute',
-                month: 'Monat',
-                week: 'Woche',
-                day: 'Tag'
-              }}
-            />
+            <div className="fc-calendar-container min-h-[500px] text-xs sm:text-sm">
+              <FullCalendar
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                initialView={typeof window !== 'undefined' && window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek"}
+                headerToolbar={{
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                }}
+                locales={[deLocale]}
+                locale="de"
+                events={events}
+                height="auto"
+                allDaySlot={false}
+                slotMinTime="08:00:00"
+                slotMaxTime="20:00:00"
+                eventClick={(info) => {
+                  const { extendedProps } = info.event;
+                  alert(`
+                    Kurs: ${info.event.title}
+                    Ort: ${extendedProps.location}
+                    Teilnehmer: ${extendedProps.participants}
+                    Datum: ${new Date(info.event.start!).toLocaleDateString('de-DE')}
+                    Uhrzeit: ${new Date(info.event.start!).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - ${new Date(info.event.end!).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                  `);
+                }}
+                eventTimeFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  meridiem: false,
+                  hour12: false
+                }}
+                buttonText={{
+                  today: 'Heute',
+                  month: 'Monat',
+                  week: 'Woche',
+                  day: 'Tag'
+                }}
+                viewDidMount={(view) => {
+                  // Anpassen der Ansicht basierend auf der Bildschirmgröße
+                  if (typeof window !== 'undefined') {
+                    const mobileView = window.innerWidth < 768;
+                    if (mobileView && (view.view.type === 'timeGridWeek' || view.view.type === 'dayGridMonth')) {
+                      // Hier verwenden wir die API des FullCalendar-Objekts
+                      const calendarApi = view.view.calendar;
+                      calendarApi.changeView('timeGridDay');
+                    }
+                  }
+                }}
+              />
+            </div>
           </div>
         )}
       </div>

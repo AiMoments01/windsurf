@@ -79,21 +79,21 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-background flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           {isSignUp ? 'Registrieren' : 'Anmelden'}
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           {isSignUp ? 'Erstellen Sie ein neues Konto' : 'Melden Sie sich mit Ihrem Konto an'}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white dark:bg-dark-card py-6 sm:py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="form-label">
+              <label htmlFor="email" className="form-label text-sm font-medium text-gray-700 dark:text-gray-300">
                 E-Mail
               </label>
               <div className="mt-1">
@@ -105,13 +105,13 @@ export default function Auth() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="form-input"
+                  className="form-input appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary text-sm dark:bg-dark-input dark:text-gray-100"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="form-label">
+              <label htmlFor="password" className="form-label text-sm font-medium text-gray-700 dark:text-gray-300">
                 Passwort
               </label>
               <div className="mt-1">
@@ -123,17 +123,17 @@ export default function Auth() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="form-input"
+                  className="form-input appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary text-sm dark:bg-dark-input dark:text-gray-100"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="rounded-md bg-error-light/10 p-4">
+              <div className="rounded-md bg-error-light/10 dark:bg-error-dark/20 p-3 sm:p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg
-                      className="h-5 w-5 text-error"
+                      className="h-4 w-4 sm:h-5 sm:w-5 text-error dark:text-error-light"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                       aria-hidden="true"
@@ -146,7 +146,7 @@ export default function Auth() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-error">{error}</h3>
+                    <h3 className="text-xs sm:text-sm font-medium text-error dark:text-error-light">{error}</h3>
                   </div>
                 </div>
               </div>
@@ -155,7 +155,7 @@ export default function Auth() {
             <div>
               <button
                 type="submit"
-                className="btn-primary w-full"
+                className="btn-primary w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 disabled={loading}
               >
                 {loading ? 'Laden...' : isSignUp ? 'Registrieren' : 'Anmelden'}
@@ -163,20 +163,20 @@ export default function Auth() {
             </div>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-5 sm:mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">oder</span>
+                <span className="bg-white dark:bg-dark-card px-2 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">oder</span>
               </div>
             </div>
 
-            <div className="mt-6 text-center">
+            <div className="mt-4 sm:mt-6 text-center">
               <button
                 type="button"
-                className="text-sm font-medium text-primary hover:text-primary-dark"
+                className="text-xs sm:text-sm font-medium text-primary hover:text-primary-dark dark:text-blue-400 dark:hover:text-blue-300"
                 onClick={() => setIsSignUp(!isSignUp)}
               >
                 {isSignUp
